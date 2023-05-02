@@ -1,0 +1,15 @@
+
+/.git/
+/.idea/
+/.vs/
+
+/[Ll]ibrary/
+/[Ll]ogs/
+/[Oo]bj/
+/[Uu]ser[Ss]ettings/
+
+/Packages/net.harrybosch.quickactions/
+
+*.csproj
+*.csproj.DotSettings
+*.sln
