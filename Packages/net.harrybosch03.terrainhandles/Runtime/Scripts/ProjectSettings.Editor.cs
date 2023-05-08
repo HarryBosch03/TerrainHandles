@@ -1,6 +1,4 @@
-﻿
-using UnityEngine;
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 
@@ -23,7 +21,7 @@ namespace TerrainHandles
 #if UNITY_EDITOR
         public static partial ProjectSettings Instance()
         {
-            Utility.GetOrCreateScriptableObject(SaveLocation, ref instance);
+            Utility.GetPackageScriptableObject(SaveLocation, ref instance);
             return instance;
         }
 
@@ -40,7 +38,7 @@ namespace TerrainHandles
         }
 #else
         public partial void GetOrCreateFallbackTerrainGenerationSettings() { }
-        public static partial ProjectSettings GetOrCreateSettings() => instance;
+        public static partial ProjectSettings Instance() => instance;
 #endif
     }
 }

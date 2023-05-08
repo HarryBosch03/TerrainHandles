@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Threading;
 using UnityEngine;
-using UnityEngine.Experimental.AI;
-using Random = System.Random;
 
 namespace TerrainHandles
 {
     public class MarchingCubes
     {
         public readonly List<Vector3> vertices = new();
+        public readonly List<Vector3> normals = new();
         public readonly List<int> indices = new();
         public readonly List<Vector2> uvs = new();
         public readonly List<Color> colors = new();
@@ -35,7 +33,7 @@ namespace TerrainHandles
 
         public float Weight(Vector3 p) => weight(p + offset);
 
-        private bool State(float w) => w > threshold == !invert;
+        private bool State(float w) => w < threshold == !invert;
 
         private const int Corners = 8;
         private Vector3 Corner(int i)
@@ -62,9 +60,9 @@ namespace TerrainHandles
             };
         }
 
-        public void AddVertex(Vector3 vert)
+        public void AddVertex(Vector3 vert, Vector3 reference)
         {
-            var i = Vector3Int.RoundToInt(vert * 2.0f / voxelSize);
+            var i = Vector3Int.RoundToInt(reference * 2.0f / voxelSize);
             if (sharedVertexMap.ContainsKey(i))
             {
                 indices.Add(sharedVertexMap[i]);
@@ -74,6 +72,30 @@ namespace TerrainHandles
             vertices.Add(vert);
             sharedVertexMap.Add(i, vertices.Count - 1);
             indices.Add(vertices.Count - 1);
+
+            CalculateSDFNormal(vert);
+        }
+
+        private void CalculateSDFNormal(Vector3 p)
+        {
+            var corners = new[]
+            {
+                new Vector3( 1.0f, -1.0f, -1.0f).normalized,
+                new Vector3(-1.0f, -1.0f, -1.0f).normalized,
+                new Vector3( 1.0f,  1.0f, -1.0f).normalized,
+                new Vector3(-1.0f,  1.0f, -1.0f).normalized,
+                new Vector3(-1.0f, -1.0f,  1.0f).normalized,
+                new Vector3( 1.0f, -1.0f,  1.0f).normalized,
+                new Vector3( 1.0f,  1.0f,  1.0f).normalized,
+                new Vector3(-1.0f,  1.0f,  1.0f).normalized,
+            };
+
+            var normal = Vector3.zero;
+            for (var i = 0; i < 8; i++)
+            {
+                normal += corners[i] * Weight(p + corners[i] * voxelSize * 0.25f);
+            }
+            normals.Add(normal.normalized);
         }
 
         private void Point()
@@ -103,7 +125,8 @@ namespace TerrainHandles
 
                 var t = Mathf.InverseLerp(wa, wb, threshold);
                 var c = Vector3.Lerp(Corner(a), Corner(b), t);
-                AddVertex(c);
+                var r = Vector3.Lerp(Corner(a), Corner(b), 0.5f);
+                AddVertex(c, r);
             }
         }
 
@@ -137,7 +160,7 @@ namespace TerrainHandles
             }
         }
         
-        public Mesh BuildMesh(bool optimize = true)
+        public Mesh BuildMesh()
         {
             var mesh = new Mesh();
             
@@ -145,12 +168,10 @@ namespace TerrainHandles
             
             mesh.Clear();
             mesh.SetVertices(vertices);
+            mesh.SetNormals(normals);
             mesh.SetIndices(indices, MeshTopology.Triangles, 0);
             mesh.SetUVs(0, uvs);
             mesh.SetColors(colors);
-
-            mesh.RecalculateNormals();
-            if (optimize) mesh.Optimize();
 
             return mesh;
         }

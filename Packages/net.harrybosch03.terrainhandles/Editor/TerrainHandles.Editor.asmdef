@@ -2,7 +2,8 @@
     "name": "TerrainHandles.Editor",
     "rootNamespace": "TerrainHandles.Editor",
     "references": [
-        "GUID:3a0362de8f6a7df44b32e427bdde58c0"
+        "GUID:3a0362de8f6a7df44b32e427bdde58c0",
+        "GUID:641a79157c282ea44ab99ae20388878d"
     ],
     "includePlatforms": [
         "Editor"

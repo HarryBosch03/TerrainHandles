@@ -6,7 +6,17 @@ namespace TerrainHandles
     {
         internal const string SaveLocation = "Packages/net.harrybosch03.terrainhandles/Runtime/Scriptable Objects/ProjectSettings.asset";
 
-        [SerializeField] private TerrainGenerationSettings fallbackSettings;
+        public TerrainGenerationSettings fallbackSettings;
+        public int updateFrequency = 10;
+        public UpdateMethod updateMethod;
+
+        public enum UpdateMethod
+        {
+            OnChangeEveryFrame,
+            OnChangeFinalize,
+            Never,
+        }
+        
         public TerrainGenerationSettings FallbackSettings => fallbackSettings;
     }
 }

@@ -54,6 +54,12 @@
         "com.unity.modules.imgui": "1.0.0"
       }
     },
+    "net.harrybosch03.editorhelper": {
+      "version": "file:net.harrybosch03.editorhelper",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "net.harrybosch03.terrainhandles": {
       "version": "file:net.harrybosch03.terrainhandles",
       "depth": 0,

@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: ProjectSettings
   m_EditorClassIdentifier: 
   fallbackSettings: {fileID: 11400000, guid: 16eec6dac0f666f4b853086adb564054, type: 2}
-  frameGenBudgetMS: 16
+  updateFrequency: 0
+  updateMethod: 0
