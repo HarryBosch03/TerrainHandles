@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Diagnostics;
 using System.Threading;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -14,7 +15,7 @@ namespace TerrainHandles
 
         private MeshFilter filter;
         private Thread generationThread;
-        private bool pendingGeneration;
+        private MarchingCubes pendingGenerator;
 
         public Vector3 GenSize => genSize;
 
@@ -23,53 +24,56 @@ namespace TerrainHandles
         [ContextMenu("Generate")]
         public void Generate() => Generate(new TerrainData());
 
-        public bool FinishedGeneration => generationThread != null && !generationThread.IsAlive && pendingGeneration;
-
+        public bool FinishedGeneration => generationThread != null && !generationThread.IsAlive && pendingGenerator != null;
+        public bool PendingGeneration => generationThread != null && generationThread.IsAlive && pendingGenerator != null;
+        public readonly Stopwatch generationTimer = new();
+        
         public Bounds Bounds => new(transform.position, genSize);
 
         public void Generate(TerrainData data)
         {
-            StartCoroutine(GenerateRoutine(data, (gen, c1, c2, size) =>
-            {
-                gen.Generate(c1, c2, size);
-                return null;
-            }));
+            var generator = GetGenerator(data);
+            generator.Generate(-genSize * 0.5f, genSize * 0.5f, voxelSize);
+            BuildMesh(generator);
         }
 
         public void GenerateAsync(TerrainData data)
         {
             if (generationThread != null && generationThread.IsAlive) return;
+         
+            generationTimer.Reset();
+            generationTimer.Start();
             
-            StartCoroutine(GenerateRoutine(data, (gen, c1, c2, size) =>
-            {
-                generationThread = gen.GenerateAsync(c1, c2, size);
-                pendingGeneration = true;
-                return new WaitUntil(() => !generationThread.IsAlive);
-            }));
+            pendingGenerator = GetGenerator(data);
+            generationThread = pendingGenerator.GenerateAsync(-genSize * 0.5f, genSize * 0.5f, voxelSize);
         }
 
-        public void Pregenerate(out MarchingCubes generator, out Vector3 min, out Vector3 max)
+        private MarchingCubes GetGenerator(TerrainData data)
         {
-            
-        }
-        
-        private IEnumerator GenerateRoutine(TerrainData data,
-            System.Func<MarchingCubes, Vector3, Vector3, float, IEnumerator> generateCallback)
-        {
-            if (voxelSize < 0.0001f) yield break;
+            if (voxelSize < 0.0001f) return null;
 
             gameObject.GetOrAddCachedComponent(ref filter);
             if (!settings) settings = TerrainGenerationSettings.Fallback();
 
-            var generator = new MarchingCubes(data.AtPoint, settings.threshold, transform.position);
-            var halt = generateCallback(generator, -genSize * 0.5f, genSize * 0.5f, voxelSize);
-            if (halt != null) yield return halt;
-
+            return new MarchingCubes(data.AtPoint, settings.threshold, transform.position);
+        }
+        
+        private void BuildMesh(MarchingCubes generator)
+        {
             var mesh = generator.BuildMesh();
             EditorUtility.SetDirty(gameObject);
-            print("Done");
 
             filter.sharedMesh = mesh;
+        }
+
+        public void FinalizeGenerateAsync()
+        {
+            if (pendingGenerator == null) return;
+
+            generationTimer.Stop();
+            BuildMesh(pendingGenerator);
+            
+            pendingGenerator = null;
         }
         
         public static void RegenerateAll(bool force = false)

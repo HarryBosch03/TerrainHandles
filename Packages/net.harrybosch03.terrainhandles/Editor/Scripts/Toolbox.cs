@@ -29,6 +29,17 @@ namespace TerrainHandles.Editor
                 if (GUILayout.Button("Rebuild All Dirty Chunks")) Chunk.RegenerateAll();
                 if (GUILayout.Button("Force Rebuild All Chunks")) Chunk.RegenerateAll(true);
             });
+            
+            helper.Section("Working", () =>
+            {
+                var chunks = Object.FindObjectsOfType<Chunk>();
+                foreach (var chunk in chunks)
+                {
+                    if (!chunk.PendingGeneration) return;
+                    GUILayout.Label($"Working: {chunk.name} ({chunk.generationTimer.ElapsedMilliseconds}ms)");
+                    Repaint();
+                }
+            });
         }
     }
 }

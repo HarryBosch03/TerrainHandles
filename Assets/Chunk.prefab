@@ -46,7 +46,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 461d69318afd77e40892f253b5031045, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  genSize: {x: 64, y: 64, z: 64}
+  genSize: {x: 32, y: 32, z: 32}
   voxelSize: 0.5
   settings: {fileID: 11400000, guid: 16eec6dac0f666f4b853086adb564054, type: 2}
 --- !u!33 &683164569465595569

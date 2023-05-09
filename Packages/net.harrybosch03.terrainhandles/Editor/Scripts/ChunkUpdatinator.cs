@@ -9,7 +9,7 @@ namespace TerrainHandles.Editor
     {
         private static float lastUpdateTime;
         private static bool finalUpdate;
-        private const float FinalUpdateDelay = 1.0f;
+        private const float FinalUpdateDelay = 0.5f;
 
         static ChunkUpdatinator()
         {
@@ -20,8 +20,16 @@ namespace TerrainHandles.Editor
 
         private static void Update()
         {
+            var chunks = Object.FindObjectsOfType<Chunk>();
+            foreach (var chunk in chunks)
+            {
+                if (chunk.FinishedGeneration) chunk.FinalizeGenerateAsync();
+            }
+            
             if (finalUpdate) return;
             if (EditorApplication.timeSinceStartup - lastUpdateTime < FinalUpdateDelay) return;
+            
+            Debug.Log("Test");
             
             Chunk.RegenerateAll(true);
             finalUpdate = true;
@@ -38,11 +46,11 @@ namespace TerrainHandles.Editor
                 stream.GetChangeGameObjectOrComponentPropertiesEvent(i, out var data);
 
                 var instance = EditorUtility.InstanceIDToObject(data.instanceId);
-                CallChangeFunction(instance);
+                if (projectSettings.updateMethod == ProjectSettings.UpdateMethod.OnChangeEveryFrame) CallChangeFunction(instance);
+                
+                lastUpdateTime = (float)EditorApplication.timeSinceStartup;
+                finalUpdate = false;
             }
-
-            lastUpdateTime = (float)EditorApplication.timeSinceStartup;
-            finalUpdate = false;
         }
 
         private static void CallChangeFunction(Object instance, bool brokenDown = false)
